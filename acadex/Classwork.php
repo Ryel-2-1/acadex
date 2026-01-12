@@ -155,6 +155,33 @@
     .back-btn { background: transparent; border: none; color: #666; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 8px; margin-bottom: 20px; font-weight: 600; }
 
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    /* --- VIRTUAL CLASS BUTTON --- */
+    .class-banner-content { 
+        position: absolute; bottom: 20px; left: 25px; right: 25px; /* Added right spacing */
+        color: white; 
+        display: flex; justify-content: space-between; align-items: flex-end; /* Layout for button */
+    }
+    .virtual-btn {
+        background-color: rgba(255, 255, 255, 0.2);
+        color: white;
+        border: 1px solid white;
+        padding: 10px 20px;
+        border-radius: 4px;
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        backdrop-filter: blur(5px);
+        transition: 0.3s;
+        cursor: pointer;
+    }
+    .virtual-btn:hover {
+        background-color: white;
+        color: #1a73e8;
+    }
 </style>
 </head>
 <body>
@@ -180,9 +207,21 @@
         <main class="main-content">
             
             <div id="streamSection" class="section-view">
-                <div class="class-banner"><div class="class-banner-content"><h1>BSIT 4-1 Programming</h1><p>Advanced Web Development</p></div></div>
+                <div class="class-banner">
+                    <div class="class-banner-content">
+                        <div>
+                            <h1>BSIT 4-1 Programming</h1>
+                            <p>Advanced Web Development</p>
+                        </div>
+                        <a href="#" class="virtual-btn">
+                            <i class="fa-solid fa-video"></i> Virtual Class
+                        </a>
+                    </div>
+                </div>
                 <div class="announce-box"><div class="avatar" style="width:35px; height:35px;"></div><span class="announce-text">Announce something to your class...</span></div>
-                <div style="margin-top: 20px; color: #5f6368; font-size: 0.9rem; text-align: center;"><p>No announcements yet.</p></div>
+                <div id="streamPostsArea" style="margin-top: 20px;">
+                    <div style="color: #5f6368; font-size: 0.9rem; text-align: center;"><p>No announcements yet.</p></div>
+                </div>
             </div>
 
             <div id="classworkSection" class="section-view active-section">
@@ -302,6 +341,7 @@
         function renderStream() {
             const list = document.getElementById('streamItemsArea');
             const empty = document.getElementById('emptyState');
+            const streamSection = document.getElementById('streamSection');
             list.innerHTML = '';
             if (items.length === 0) { empty.style.display = 'block'; } 
             else {
@@ -318,6 +358,39 @@
                     list.prepend(div);
                 });
             }
+const bannerHTML = `
+                <div class="class-banner">
+                    <div class="class-banner-content">
+                        <div>
+                            <h1>BSIT 4-1 Programming</h1>
+                            <p>Advanced Web Development</p>
+                        </div>
+                        <a href="#" class="virtual-btn">
+                            <i class="fa-solid fa-video"></i> Virtual Class
+                        </a>
+                    </div>
+                </div>`;
+            
+            const announceBoxHTML = `<div class="announce-box"><div class="avatar" style="width:35px; height:35px;"></div><span class="announce-text">Announce something to your class...</span></div>`;
+            
+            let postsHTML = '';
+            if (items.length === 0) {
+                postsHTML = `<div style="color: #5f6368; font-size: 0.9rem; text-align: center; margin-top:20px;"><p>No announcements yet.</p></div>`;
+            } else {
+                items.slice().reverse().forEach((item, index) => {
+                    const originalIndex = items.length - 1 - index;
+                    postsHTML += `
+                        <div class="stream-item" style="margin-top:15px;" onclick="switchTab('classwork'); showDetail(${originalIndex})">
+                            <div class="item-icon ${item.colorClass}"><i class="${item.icon}"></i></div>
+                            <div class="item-content">
+                                <div class="item-title">Prof. Gandionco posted a new ${item.type}: ${item.title}</div>
+                                <div class="item-meta">Just now</div>
+                            </div>
+                        </div>`;
+                });
+            }
+            
+            streamSection.innerHTML = bannerHTML + announceBoxHTML + `<div id="streamPostsArea">${postsHTML}</div>`;
         }
 
         // --- DETAIL VIEW & EDITABLE QUIZ ---
