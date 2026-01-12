@@ -11,7 +11,7 @@
         body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f5f7fa; color: #333; }
         * { box-sizing: border-box; }
 
-        /* --- HEADER STYLES (Identical to Dashboard) --- */
+        /* --- HEADER STYLES --- */
         header {
             background-color: white;
             padding: 0 40px;
@@ -58,7 +58,6 @@
         /* --- GRADEBOOK SPECIFIC STYLES --- */
         main { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
 
-        /* Toolbar */
         .gb-toolbar {
             display: flex;
             justify-content: space-between;
@@ -112,15 +111,15 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            transition: background 0.2s;
         }
         .export-btn:hover { background-color: #219150; }
 
-        /* Grade Table */
         .table-container {
             background: white;
             border-radius: 8px;
             border: 1px solid #e0e0e0;
-            overflow-x: auto; /* Allow side scroll if many columns */
+            overflow-x: auto;
             box-shadow: 0 2px 5px rgba(0,0,0,0.02);
         }
 
@@ -155,7 +154,6 @@
         tr:last-child td { border-bottom: none; }
         tr:hover { background-color: #fcfcfc; }
 
-        /* Student Cell Style */
         .student-cell {
             display: flex;
             align-items: center;
@@ -170,7 +168,6 @@
             color: #666; font-weight: bold;
         }
 
-        /* Input Grade Cell */
         .grade-input {
             width: 50px;
             padding: 6px;
@@ -187,7 +184,6 @@
             outline: none;
         }
 
-        /* Status Badges */
         .badge {
             padding: 4px 10px;
             border-radius: 12px;
@@ -250,7 +246,7 @@
                 </div>
             </div>
 
-            <button class="export-btn">
+            <button class="export-btn" id="exportCsvBtn">
                 <i class="fa-solid fa-file-csv"></i> Export CSV
             </button>
         </div>
@@ -322,7 +318,7 @@
                         <td class="average-cell">96%</td>
                         <td><span class="badge pass">Passed</span></td>
                     </tr>
-                    </tbody>
+                </tbody>
             </table>
         </div>
 
@@ -336,31 +332,71 @@
             const table = document.getElementById("gradeTable");
             const tr = table.getElementsByTagName("tr");
 
-            for (let i = 1; i < tr.length; i++) { // Start at 1 to skip header
-                const td = tr[i].getElementsByTagName("td")[0]; // Check Name column
+            for (let i = 1; i < tr.length; i++) {
+                const td = tr[i].getElementsByTagName("td")[0];
                 if (td) {
                     const txtValue = td.textContent || td.innerText;
-                    if (txtValue.toUpperCase().indexOf(filter) > -1) {
-                        tr[i].style.display = "";
-                    } else {
-                        tr[i].style.display = "none";
-                    }
+                    tr[i].style.display = (txtValue.toUpperCase().indexOf(filter) > -1) ? "" : "none";
                 }       
             }
         }
 
-        // Mock function to simulate grade calculation UI update
-        // In the real app, this would send an AJAX request to save to DB
         function calculateRow(input) {
-            // Visual feedback that data "saved"
             input.style.backgroundColor = "#e8f5e9";
             setTimeout(() => {
                 input.style.backgroundColor = "transparent";
             }, 500);
-            
-            // Note: Actual average calculation logic would go here
             console.log("Grade updated: " + input.value);
+            // In a real app, you'd recalculate the average cell here
         }
+
+        // --- EXPORT CSV LOGIC ---
+        function downloadCSV() {
+            const table = document.getElementById("gradeTable");
+            let csvContent = [];
+            
+            // Get Header row
+            const header = Array.from(table.querySelectorAll("thead th")).map(th => `"${th.innerText.trim()}"`);
+            csvContent.push(header.join(","));
+
+            // Get Data rows
+            const rows = Array.from(table.querySelectorAll("tbody tr"));
+            
+            rows.forEach(row => {
+                const cells = Array.from(row.querySelectorAll("td"));
+                const rowData = cells.map((td, index) => {
+                    // Column 0 has nested divs/names
+                    if (index === 0) {
+                        return `"${td.querySelector('div[style*="font-weight:600"]').innerText.trim()}"`;
+                    }
+                    // Middle columns have inputs
+                    const input = td.querySelector('input');
+                    if (input) {
+                        return `"${input.value}"`;
+                    }
+                    // Last columns have text/badges
+                    return `"${td.innerText.trim()}"`;
+                });
+                csvContent.push(rowData.join(","));
+            });
+
+            // Create blob and download
+            const csvString = csvContent.join("\n");
+            const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            
+            const className = document.getElementById("classSelector").options[document.getElementById("classSelector").selectedIndex].text;
+            
+            link.setAttribute("href", url);
+            link.setAttribute("download", `Gradebook_${className.replace(/\s+/g, '_')}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        document.getElementById("exportCsvBtn").addEventListener("click", downloadCSV);
     </script>
 </body>
 </html>

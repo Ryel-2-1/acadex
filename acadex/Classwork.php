@@ -337,25 +337,51 @@
             finally { btn.innerText = "Generate"; btn.disabled = false; }
         }
 
-        // --- RENDER STREAM ---
+        // --- RENDER STREAM & CLASSWORK ---
         function renderStream() {
+            // Render to Classwork
             const list = document.getElementById('streamItemsArea');
             const empty = document.getElementById('emptyState');
             const streamSection = document.getElementById('streamSection');
             list.innerHTML = '';
-            if (items.length === 0) { empty.style.display = 'block'; } 
-            else {
+            
+            // Render to Stream Tab
+            const streamList = document.getElementById('streamPostsArea');
+            streamList.innerHTML = '';
+
+            if (items.length === 0) { 
+                empty.style.display = 'block'; 
+                streamList.innerHTML = `<div style="color: #5f6368; font-size: 0.9rem; text-align: center;"><p>No announcements yet.</p></div>`;
+            } else {
                 empty.style.display = 'none';
-                items.forEach((item, index) => {
+                items.slice().reverse().forEach((item, index) => {
+                    const originalIndex = items.length - 1 - index;
+                    
+                    // Add to Classwork View
                     const div = document.createElement('div');
                     div.className = 'stream-item';
-                    div.onclick = () => showDetail(index);
+                    div.onclick = () => showDetail(originalIndex);
                     div.innerHTML = `
                         <div class="item-icon ${item.colorClass}"><i class="${item.icon}"></i></div>
-                        <div class="item-content"><div class="item-title">${item.title}</div><div class="item-meta">Posted just now ${item.file ? '• Has attachment' : ''}</div></div>
-                        <i class="fa-solid fa-ellipsis-vertical" style="color:#5f6368; padding: 10px;"></i>
+                        <div class="item-content">
+                            <div class="item-title">${item.title}</div>
+                            <div class="item-meta">Posted just now ${item.file ? '• Has attachment' : ''}</div>
+                        </div>
                     `;
-                    list.prepend(div);
+                    list.appendChild(div);
+
+                    // Add to Stream Tab
+                    const streamDiv = document.createElement('div');
+                    streamDiv.className = 'stream-item';
+                    streamDiv.onclick = () => { switchTab('classwork'); showDetail(originalIndex); };
+                    streamDiv.innerHTML = `
+                        <div class="item-icon ${item.colorClass}"><i class="${item.icon}"></i></div>
+                        <div class="item-content">
+                            <div class="item-title">Prof. Gandionco posted a new ${item.type}: ${item.title}</div>
+                            <div class="item-meta">Just now</div>
+                        </div>
+                    `;
+                    streamList.appendChild(streamDiv);
                 });
             }
 const bannerHTML = `
@@ -471,7 +497,10 @@ const bannerHTML = `
         }
 
         window.onclick = function(e) {
-            if (!e.target.matches('.create-btn') && !e.target.closest('.create-btn')) document.getElementById('createDropdown').style.display = 'none';
+            if (!e.target.matches('.create-btn') && !e.target.closest('.create-btn')) {
+                const dd = document.getElementById('createDropdown');
+                if(dd) dd.style.display = 'none';
+            }
             if (e.target.classList.contains('modal-overlay')) closeAllModals();
         }
     </script>
